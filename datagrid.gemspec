@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Bogdan Gusiev"]
-  s.date = "2015-01-21"
+  s.date = "2015-02-04"
   s.description = "This allows you to easily build datagrid aka data tables with sortable columns and filters"
   s.email = "agresso@gmail.com"
   s.extra_rdoc_files = [
@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
     "app/views/datagrid/_row.html.erb",
     "app/views/datagrid/_table.html.erb",
     "datagrid.gemspec",
+    "ext/platform_dependencies.rb",
     "lib/datagrid.rb",
     "lib/datagrid/active_model.rb",
     "lib/datagrid/column_names_attribute.rb",
@@ -120,7 +121,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/bogdan/datagrid"
   s.licenses = ["MIT"]
-  s.rubygems_version = "2.2.2"
+  s.rubygems_version = "2.4.3"
   s.summary = "Ruby gem to create datagrids"
 
   if s.respond_to? :specification_version then
@@ -130,9 +131,6 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rails>, [">= 3.0"])
       s.add_development_dependency(%q<bundler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
-      s.add_development_dependency(%q<debugger>, [">= 0"])
-      s.add_development_dependency(%q<byebug>, [">= 0"])
-      s.add_development_dependency(%q<ruby-debug>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 3"])
       s.add_development_dependency(%q<nokogiri>, [">= 0"])
       s.add_development_dependency(%q<sqlite3>, [">= 0"])
@@ -145,9 +143,6 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rails>, [">= 3.0"])
       s.add_dependency(%q<bundler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
-      s.add_dependency(%q<debugger>, [">= 0"])
-      s.add_dependency(%q<byebug>, [">= 0"])
-      s.add_dependency(%q<ruby-debug>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 3"])
       s.add_dependency(%q<nokogiri>, [">= 0"])
       s.add_dependency(%q<sqlite3>, [">= 0"])
@@ -161,9 +156,6 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rails>, [">= 3.0"])
     s.add_dependency(%q<bundler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
-    s.add_dependency(%q<debugger>, [">= 0"])
-    s.add_dependency(%q<byebug>, [">= 0"])
-    s.add_dependency(%q<ruby-debug>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 3"])
     s.add_dependency(%q<nokogiri>, [">= 0"])
     s.add_dependency(%q<sqlite3>, [">= 0"])
