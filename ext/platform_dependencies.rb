@@ -3,14 +3,15 @@ require 'rubygems/dependency_installer'
 installer = Gem::DependencyInstaller.new
 
 begin
-  if RUBY_VERSION >= '2.0'
-    puts "Installing byebug for Ruby #{RUBY_VERSION}"
+  ruby_version = RUBY_VERSION.sub /^[a-z-]*/, ''
+  if ruby_version >= '2.0'
+    puts "Installing byebug for Ruby #{ruby_version}"
     installer.install 'byebug'
-  elsif RUBY_VERSION >= '1.9'
-    puts "Installing debugger for Ruby #{RUBY_VERSION}"
+  elsif ruby_version >= '1.9'
+    puts "Installing debugger for Ruby #{ruby_version}"
     installer.install 'debugger'
-  elsif RUBY_VERSION >= '1.8'
-    puts "Installing ruby-debug for Ruby #{RUBY_VERSION}"
+  elsif ruby_version >= '1.8'
+    puts "Installing ruby-debug for Ruby #{ruby_version}"
     installer.install 'ruby-debug'
   end
 rescue => e
