@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Bogdan Gusiev"]
-  s.date = "2015-02-04"
+  s.date = "2015-02-05"
   s.description = "This allows you to easily build datagrid aka data tables with sortable columns and filters"
   s.email = "agresso@gmail.com"
   s.extra_rdoc_files = [
@@ -34,7 +34,6 @@ Gem::Specification.new do |s|
     "app/views/datagrid/_row.html.erb",
     "app/views/datagrid/_table.html.erb",
     "datagrid.gemspec",
-    "ext/platform_dependencies.rb",
     "lib/datagrid.rb",
     "lib/datagrid/active_model.rb",
     "lib/datagrid/column_names_attribute.rb",
