@@ -11,16 +11,8 @@ module Datagrid
         include Datagrid::Columns
 
         datagrid_attribute :order do |value|
-          unless value.blank?
-            value = value.to_sym
-            column = column_by_name(value)
-            unless column 
-              self.class.order_unsupported(value, "no column #{value} in #{self.class}")
-            end
-            unless column.supports_order?
-              self.class.order_unsupported(column.name, "column don't support order" ) 
-            end
-            value
+          if value.present?
+            value.to_sym
           else
             nil
           end
@@ -47,6 +39,7 @@ module Datagrid
     module InstanceMethods
 
       def assets # :nodoc:
+        check_order_valid!
         apply_order(super)
       end
 
@@ -60,7 +53,13 @@ module Datagrid
       #   MyGrid.new(:order => "name").order_column # => #<Column name: "name", ...>
       #
       def order_column
-        column_by_name(order)
+        order && column_by_name(order)
+      end
+
+      # Returns true if given grid is ordered by given column.
+      # <tt>column</tt> can be given as name or as column object
+      def ordered_by?(column)
+        order_column == column_by_name(column)
       end
 
       private
@@ -82,6 +81,17 @@ module Datagrid
           else
             apply_asc_order(assets, order_column.order)
           end
+        end
+      end
+
+      def check_order_valid!
+        return unless order
+        column = column_by_name(order)
+        unless column 
+          self.class.order_unsupported(order, "no column #{order} in #{self.class}")
+        end
+        unless column.supports_order?
+          self.class.order_unsupported(column.name, "column don't support order" ) 
         end
       end
 

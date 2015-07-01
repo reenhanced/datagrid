@@ -1,4 +1,4 @@
-module RangedFilter
+module Datagrid::Filters::RangedFilter
   
 
   def initialize(grid, name, options, &block)
@@ -36,7 +36,7 @@ module RangedFilter
     options[:range]
   end
 
-  def default_filter_where(driver, scope, value)
+  def default_filter_where(scope, value)
     if range? && value.is_a?(Array)
       left, right = value
       if left
@@ -47,7 +47,7 @@ module RangedFilter
       end
       scope
     else 
-      super(driver, scope, value)
+      super(scope, value)
     end
   end
 

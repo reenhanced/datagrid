@@ -23,13 +23,70 @@ describe Datagrid::Columns do
     let(:date) { Date.new(2013, 8, 1) }
 
     it "should have data columns without html columns" do
-      expect(subject.data_columns.size).to eq(subject.columns.size - 1)
+      grid = test_report do
+        scope {Entry}
+        column(:name)
+        column(:action, :html => true) do 
+          'dummy'
+        end
+      end
+      expect(grid.data_columns.map(&:name)).to eq([:name])
+      expect(grid.html_columns.map(&:name)).to eq([:name, :action])
     end
     it "should build rows of data" do
-      expect(subject.rows).to eq([[date, "Pop", "Star", "admin", "ROTTWEILER"]])
+      grid = test_report do
+        scope {Entry}
+        column(:name)
+        column(:action, :html => true) do 
+          'dummy'
+        end
+      end
+      expect(grid.rows).to eq([["Star"]])
     end
-    it  "should generate header" do
-      expect(subject.header).to eq(["Shipping date", "Group", "Name", "Access level", "Pet"])
+    it  "should generate header without html columns" do
+      grid = test_report do
+        scope {Entry}
+        column(:name)
+        column(:action, :html => true) do 
+          'dummy'
+        end
+      end
+      expect(grid.header).to eq(["Name"])
+    end
+
+    describe "translations" do
+      
+      module ::Ns45
+        class TranslatedReport
+          include Datagrid
+          scope { Entry }
+          column(:name)
+        end
+      end
+      it "translates column with deprecated namespace" do
+        silence_warnings do
+          store_translations(:en, datagrid: {ns45_translated_report: {columns: {name: "Navn"}}}) do
+            expect(Ns45::TranslatedReport.new.header.first).to eq("Navn")
+          end
+        end
+      end
+
+      it "translates column with namespace" do
+        store_translations(:en, datagrid: {:"ns45/translated_report" => {columns: {name: "Navn"}}}) do
+          expect(Ns45::TranslatedReport.new.header.first).to eq("Navn")
+        end
+      end
+
+      it "translates column without namespace" do
+        class Report27
+          include Datagrid
+          scope {Entry}
+          column(:name)
+        end
+        store_translations(:en, datagrid: {:"report27" => {columns: {name: "Nombre"}}}) do
+          expect(Report27.new.header.first).to eq("Nombre")
+        end
+      end
     end
 
     it "should return html_columns" do
@@ -212,7 +269,10 @@ describe Datagrid::Columns do
       end
       first = Entry.create(:name => '1st')
       second = Entry.create(:name => '2nd')
-      expect { report.attributes = {:order => :id} }.to raise_error(Datagrid::OrderUnsupported)
+      expect do
+        report.attributes = {:order => :id} 
+        report.assets
+      end.to raise_error(Datagrid::OrderUnsupported)
       report.attributes = {:order => :name, :descending => true}
       expect(report.assets).to eq([second, first])
     end

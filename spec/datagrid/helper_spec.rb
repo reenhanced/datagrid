@@ -31,6 +31,7 @@ describe Datagrid::Helper do
     let(:grid) do
       test_report do
         scope { Entry.where("1 != 1") }
+        column(:id)
       end
     end
 
@@ -55,6 +56,7 @@ describe Datagrid::Helper do
         class TestGrid
           include Datagrid
           scope { Entry }
+          column(:id)
         end
       end
       expect(subject.datagrid_table(::Ns23::TestGrid.new)).to match_css_pattern(
@@ -125,6 +127,18 @@ describe Datagrid::Helper do
           "table.datagrid th.category" => 0,
           "table.datagrid td.category" => 0
         )
+      end
+    end
+
+    context "when grid has no columns" do
+      let(:grid) do
+        test_report do
+          scope {Entry}
+        end
+      end
+
+      it "should render no_columns message" do
+        expect(subject.datagrid_table(grid, [entry])).to equal_to_dom("No columns selected")
       end
     end
 
@@ -454,6 +468,29 @@ describe Datagrid::Helper do
       expect(subject.datagrid_form_for(::ParamNameGrid81.new, :url => "/grid")).to match_css_pattern(
         "form.datagrid-form input[name='g[id]']" => 1,
       )
+    end
+
+    it "takes default partials if custom doesn't exist" do
+      class PartialDefaultGrid
+        include Datagrid
+        scope {Entry}
+        filter(:id, :integer, :range => true)
+        filter(:group_id, :enum, :multiple => true, :checkboxes => true, :select => [1,2])
+        def param_name
+          'g'
+        end
+      end
+      rendered_form = subject.datagrid_form_for(PartialDefaultGrid.new, {
+        :url => '',
+        :partials => 'custom_form'
+      })
+      expect(rendered_form).to include 'form_partial_test'
+      expect(rendered_form).to match_css_pattern([
+        'input.integer_filter.from',
+        'input.integer_filter.to',
+        ".enum_filter input[value='1']",
+        ".enum_filter input[value='2']",
+      ])
     end
   end
 

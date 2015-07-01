@@ -184,10 +184,15 @@ module Datagrid
       #             #    ]
       def dynamic(&block)
         previous_block = dynamic_block
-        self.dynamic_block = proc {
-          instance_eval(&previous_block) if previous_block
-          instance_eval(&block)
-        }
+        self.dynamic_block = 
+          if previous_block
+            proc {
+              instance_eval(&previous_block)
+              instance_eval(&block)
+            }
+          else
+            block
+          end
       end
 
       def inherited(child_class) #:nodoc:
@@ -319,7 +324,7 @@ module Datagrid
       def to_csv(*column_names)
         options = column_names.extract_options!
         csv_class.generate(
-          {:headers => self.header(*column_names), :write_headers => true}.merge(options)
+          {:headers => self.header(*column_names), :write_headers => true}.merge!(options)
         ) do |csv|
           each_with_batches do |asset|
             csv << row_for(asset, *column_names)
@@ -419,7 +424,7 @@ module Datagrid
         instance_eval(&dynamic_block) if dynamic_block
       end
 
-      # Returns all columns available for current grid configuration
+      # Returns all columns available for current grid configuration.
       #   
       #   class MyGrid
       #     filter(:search)

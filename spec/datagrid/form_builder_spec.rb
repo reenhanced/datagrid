@@ -58,6 +58,13 @@ describe Datagrid::FormBuilder do
       it { should equal_to_dom(
         '<input class="group_id integer_filter" id="report_group_id" name="report[group_id]" size="30" type="text"/>'
       )}
+
+      context "when partials option is passed for filter that don't support range" do
+        let(:_filter_options) { {partials: 'anything' } }
+        it { should equal_to_dom(
+          '<input class="group_id integer_filter" id="report_group_id" name="report[group_id]" size="30" type="text"/>'
+        )}
+      end
     end
 
     context "with date filter type" do
@@ -130,14 +137,31 @@ describe Datagrid::FormBuilder do
         )}
       end
 
-      context "when custom format translation specified" do
+      context "with custom partials option and template exists" do
+        let(:_filter_options) { { :partials => 'custom_range' } }
+        let(:_range) { nil }
+        it { should equal_to_dom(
+          "custom_range_partial"
+        ) }
+      end
+
+      context "when custom partial doesn't exist" do
+        let(:_filter_options) { { :partials => 'not_existed' } }
+        let(:_range) { nil }
+        it { should equal_to_dom(
+          '<input class="group_id integer_filter from" multiple name="report[group_id][]" size="30" type="text"><span class="separator integer"> - </span><input class="group_id integer_filter to" multiple name="report[group_id][]" size="30" type="text">'
+        ) }
+        
+      end
+
+      context "when deprecated format translation specified" do
         let(:_range) { nil }
         around(:each) do |example|
-          I18n.load_path << File.expand_path('../../support/locale/custom_range_format.yml', __FILE__)
-          I18n.reload!
-          example.run
-          I18n.load_path.pop
-          I18n.reload!
+          store_translations(:en, datagrid: {filters: {integer: {range_format: "from %{from_input} to %{to_input}"}}}) do
+            silence_warnings do
+              example.run
+            end
+          end
         end
         it { should equal_to_dom(
           'from <input class="group_id integer_filter from" multiple name="report[group_id][]" size="30" type="text"> to <input class="group_id integer_filter to" multiple name="report[group_id][]" size="30" type="text">'
@@ -146,12 +170,11 @@ describe Datagrid::FormBuilder do
       context "when deprecated separator is specified" do
         let(:_range) { nil }
         around(:each) do |example|
-          I18n.load_path << File.expand_path('../../support/locale/deprecated_range_separator.yml', __FILE__)
-          I18n.reload!
-          example.run
-          I18n.load_path.pop
-          I18n.reload!
-
+          store_translations(:en, datagrid: {filters: {integer: {range_separator: " | "}}}) do
+            silence_warnings do
+              example.run
+            end
+          end
         end
         it { should equal_to_dom(
           '<input class="group_id integer_filter from" multiple name="report[group_id][]" size="30" type="text"> | <input class="group_id integer_filter to" multiple name="report[group_id][]" size="30" type="text">'
@@ -291,14 +314,6 @@ describe Datagrid::FormBuilder do
         )}
       end
       context "with checkboxes option" do
-        let(:_filter) { :category_with_prompt }
-        it { should equal_to_dom(
-          '<select class="category_with_prompt enum_filter" id="report_category_with_prompt" name="report[category_with_prompt]"><option value="">My Prompt</option>
-         <option value="first">first</option>
-         <option value="second">second</option></select>'
-        )}
-      end
-      context "with checkboxes option" do
         let(:_grid) do
           test_report do
             scope {Entry}
@@ -322,6 +337,11 @@ describe Datagrid::FormBuilder do
           )}
 
 
+        end
+
+        context "when partials option passed and partial exists" do
+          let(:_filter_options) { {partials: 'custom_checkboxes'} }
+          it { should equal_to_dom('custom_enum_checkboxes') }
         end
       end
     end

@@ -9,7 +9,7 @@ describe Datagrid::Drivers::MongoMapper, :mongomapper do
     it {should be_match(MongoMapperEntry)}
     # MongoMapper doesn't have a scoped method, instead it has a query method which returns a Plucky::Query object
     it {should be_match(MongoMapperEntry.query)}
-    it {should_not be_match(Entry.scoped)}
+    it {should_not be_match(Entry.where(:id => 1))}
 
   end
   describe "api" do
@@ -92,7 +92,7 @@ describe Datagrid::Drivers::MongoMapper, :mongomapper do
         test_report(:order => :test) do
           scope { MongoMapperEntry }
           column(:test)
-        end
+        end.assets
       }.to raise_error(Datagrid::OrderUnsupported)
     end
   end

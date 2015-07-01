@@ -7,6 +7,8 @@ module Datagrid
     def datagrid_filter(filter_or_attribute, options = {}, &block)
       filter = datagrid_get_filter(filter_or_attribute)
       options = add_html_classes(options, filter.name, datagrid_filter_html_class(filter))
+      # Prevent partials option from appearing in HTML attributes
+      options.delete(:partials) unless supports_partial?(filter)
       self.send(filter.form_builder_helper_name, filter, options, &block)
     end
 
@@ -48,18 +50,17 @@ module Datagrid
     end
 
     def datagrid_enum_filter(attribute_or_filter, options = {}, &block)
-      options = options.clone
       filter = datagrid_get_filter(attribute_or_filter)
       if filter.checkboxes?
+        partial = partial_path(options, 'enum_checkboxes')
         options = add_html_classes(options, 'checkboxes')
-        partials_path = options.delete(:partials) || 'datagrid' 
-        elements = filter.select(object).map do |element|
+        elements = object.select_options(filter).map do |element|
           text, value = @template.send(:option_text_and_value, element)
           checked = enum_checkbox_checked?(filter, value)
           [value, text, checked]
         end
         @template.render(
-          :partial => File.join(partials_path, 'enum_checkboxes'),
+          :partial => partial,
           :locals => {
             :elements => elements, 
             :form => self, 
@@ -73,7 +74,7 @@ module Datagrid
         end
         select(
           filter.name, 
-          filter.select(object) || [],
+          object.select_options(filter) || [],
           {:include_blank => filter.include_blank,
            :prompt => filter.prompt,
            :include_hidden => false},
@@ -95,7 +96,7 @@ module Datagrid
 
     def datagrid_integer_filter(attribute_or_filter, options = {})
       filter = datagrid_get_filter(attribute_or_filter)
-      if filter.multiple? && self.object[filter.name].blank?
+      if filter.multiple? && object[filter.name].blank?
         options[:value] = ""
       end
       datagrid_range_filter(:integer, filter, options)
@@ -108,7 +109,7 @@ module Datagrid
       options = options.merge(:name => input_name)
       field_input = select(
         filter.name,
-        filter.select(object) || [],
+        object.select_options(filter) || [],
         {
           :include_blank => filter.include_blank,
           :prompt => filter.prompt,
@@ -129,6 +130,7 @@ module Datagrid
     def datagrid_range_filter(type, attribute_or_filter, options = {})
       filter = datagrid_get_filter(attribute_or_filter)
       if filter.range?
+        partial = partial_path(options, 'range_filter')
         options = options.merge(:multiple => true)
 
 
@@ -137,17 +139,34 @@ module Datagrid
         from_input = text_field(filter.name, from_options)
         to_input = text_field(filter.name, to_options)
 
+        format_key = "datagrid.filters.#{type}.range_format"
+        separator_key = "datagrid.filters.#{type}.range_separator"
         # 2 inputs: "from date" and "to date" to specify a range
-        if separator = I18n.t("datagrid.filters.#{type}.range_separator", default: '').presence
+        if I18n.exists?(separator_key)
           # Support deprecated translation option: range_separator
+          warn_deprecated_range_localization(separator_key)
+          separator = I18n.t(separator_key, default: '').presence
           [from_input, separator, to_input].join.html_safe
+        elsif I18n.exists?(format_key)
+          # Support deprecated translation option: range_format
+          warn_deprecated_range_localization(format_key)
+          I18n.t(format_key, :from_input => from_input, :to_input => to_input).html_safe
         else
-          # More flexible range_format option
-          I18n.t("datagrid.filters.#{type}.range_format", :from_input => from_input, :to_input => to_input).html_safe
+          # More flexible way to render via partial
+          @template.render :partial => partial, :locals => {
+            :from_options => from_options, :to_options => to_options, :filter => filter, :form => self
+          }
         end
       else
         datagrid_default_filter(filter, options)
       end
+    end
+
+    def warn_deprecated_range_localization(key)
+      Datagrid::Utils.warn_once(
+        "#{key} localization key is deprectated. " +
+        "Customize formatting by rake datagrid:copy_partials and editing app/views/datagrid/range_filter partial."
+      )
     end
 
     def datagrid_range_filter_options(object, filter, type, options)
@@ -197,8 +216,22 @@ module Datagrid
       Datagrid::Utils.add_html_classes(options, *classes)
     end
 
-    class Error < StandardError
+    def partial_path(options, name)
+      if partials = options.delete(:partials)
+        partial_name = File.join(partials, name)
+        # Second argument is []: no magical namespaces to lookup added from controller 
+        if @template.lookup_context.template_exists?(partial_name, [], true)
+          return partial_name
+        end
+      end
+      File.join('datagrid', name)
     end
 
+    def supports_partial?(filter)
+      (filter.supports_range? && filter.range?) || (filter.type == :enum && filter.checkboxes?)
+    end
+
+    class Error < StandardError
+    end
   end
 end

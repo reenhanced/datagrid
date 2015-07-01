@@ -12,6 +12,20 @@ module Datagrid
         TRUTH.include?(value)
       end
 
+      def translate_from_namespace(namespace, grid_class, key)
+        deprecated_key = :"datagrid.#{grid_class.param_name}.#{namespace}.#{key}"
+        live_key = :"datagrid.#{grid_class.model_name.i18n_key}.#{namespace}.#{key}"
+        i18n_key = grid_class.model_name.i18n_key.to_s
+
+        if grid_class.param_name != i18n_key && I18n.exists?(deprecated_key)
+          Datagrid::Utils.warn_once(
+            "Deprecated translation namespace 'datagrid.#{grid_class.param_name}' for #{grid_class}. Use 'datagrid.#{i18n_key}' instead."
+          )
+          return I18n.t(deprecated_key)
+        end
+        I18n.t(live_key, default: key.to_s.humanize).presence
+      end
+
       def warn_once(message, delay = 5)
         @warnings ||= {}
         timestamp = @warnings[message]
@@ -82,13 +96,13 @@ module Datagrid
         if value.is_a?(String)
           Array(Datagrid.configuration.datetime_formats).each do |format|
             begin
-              return DateTime.strptime(value, format)
+              return Time.strptime(value, format)
             rescue ::ArgumentError
             end
           end
         end
-        return DateTime.parse(value) if value.is_a?(String)
-        return value.to_datetime if value.respond_to?(:to_datetime)
+        return Time.parse(value) if value.is_a?(String)
+        return value.to_time if value.respond_to?(:to_time)
         value
       rescue ::ArgumentError
         nil

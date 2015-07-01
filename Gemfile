@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "rails", ">= 3.0"
+gem "rails", ">= 3.2.18"
 
 group :development do
 
@@ -15,10 +15,9 @@ group :development do
 
   group :mongo do
     gem "mongoid", "3.1.6"
-    gem "mongo_mapper", ">=0.11.0"
+    gem "mongo_mapper", "~> 0.11.0"
     gem "bson", "1.4.0"
     gem "bson_ext", "1.4.0"
   end
 
-  gem "fastercsv", :platform => "mri_18"
 end

@@ -49,8 +49,7 @@ class Datagrid::Filters::BaseFilter #:nodoc:
   end
 
   def header
-    options[:header] ||
-      I18n.translate(self.name, :scope => "datagrid.#{grid_class.param_name}.filters", :default => self.name.to_s.humanize)
+    options[:header] || Datagrid::Utils.translate_from_namespace(:filters, grid_class, name)
   end
 
   def default
@@ -92,12 +91,15 @@ class Datagrid::Filters::BaseFilter #:nodoc:
 
   def default_filter(value, scope, grid)
     return nil if dummy?
-    driver = grid.driver
     if !driver.has_column?(scope, name) && driver.to_scope(scope).respond_to?(name)
       driver.to_scope(scope).send(name, value)
     else
-      default_filter_where(driver, scope, value)
+      default_filter_where(scope, value)
     end
+  end
+
+  def supports_range?
+    self.class.ancestors.include?(::Datagrid::Filters::RangedFilter)
   end
 
   def format(value)
@@ -119,7 +121,7 @@ class Datagrid::Filters::BaseFilter #:nodoc:
 
   protected
 
-  def default_filter_where(driver, scope, value)
+  def default_filter_where(scope, value)
     driver.where(scope, name, value)
   end
 
@@ -145,6 +147,10 @@ class Datagrid::Filters::BaseFilter #:nodoc:
 
   def default_separator
     ','
+  end
+
+  def driver
+    grid_class.driver
   end
 
 end

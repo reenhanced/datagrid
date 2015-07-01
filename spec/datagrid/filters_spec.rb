@@ -204,4 +204,52 @@ describe Datagrid::Filters do
       expect(object.type).to eq(:integer)
     end
   end
+
+  describe "tranlations" do
+    
+    module ::Ns46
+      class TranslatedReport
+        include Datagrid
+        scope { Entry }
+        filter(:name)
+      end
+    end
+    it "translates filter with deprecated namespace" do
+      grid = Ns46::TranslatedReport.new
+      silence_warnings do
+        store_translations(:en, datagrid: {ns46_translated_report: {filters: {name: "Navn"}}}) do
+          expect(grid.filters.map(&:header)).to eq(["Navn"])
+        end
+      end
+    end
+
+    it "translates filter with namespace" do
+      grid = Ns46::TranslatedReport.new
+      store_translations(:en, datagrid: {:"ns46/translated_report" => {filters: {name: "Navn"}}}) do
+        expect(grid.filters.map(&:header)).to eq(["Navn"])
+      end
+    end
+
+  end
+
+
+  describe "#select_options" do
+    it "should return select options" do
+      grid = test_report do
+        scope {Entry}
+        filter(:id, :enum, select: [1,2,3])
+      end
+      expect(grid.select_options(:id)).to eq([1,2,3])
+    end
+
+    it "should raise ArgumentError for filter without options" do
+      grid = test_report do
+        scope {Entry}
+        filter(:id, :integer)
+      end
+      expect {
+        grid.select_options(:id)
+      }.to raise_error(Datagrid::ArgumentError)
+    end
+  end
 end
